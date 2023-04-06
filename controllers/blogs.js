@@ -73,6 +73,9 @@ router.post('/', tokenExtractor, async (req, res, next) => {
                 username: req.decodedToken.username
             }
         });
+        if (isNaN(req.body.year)) {
+            return res.status(401).json({ error: "Year given is not a integer"})
+        }
         const blog = await Blog.create({...req.body, userId: user.id });
         res.json(blog);
     } catch(error) {

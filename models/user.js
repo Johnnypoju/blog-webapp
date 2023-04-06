@@ -25,6 +25,14 @@ User.init({
     password: {
         type: DataTypes.TEXT,
         allowNull: false
+    },
+    admin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    disabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 }, {
     sequelize,

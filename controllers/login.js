@@ -24,6 +24,11 @@ router.post('/', async (req, res) => {
         });
     };
 
+    if (user.disabled) {
+        return res.status(401).json({
+            error: 'account is disabled, please contact your admin'
+        })
+    }
     const userForToken = {
         username: user.username,
         id: user.id,

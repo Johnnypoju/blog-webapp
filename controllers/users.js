@@ -1,8 +1,20 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 
-const { User, Blog } = require('../models');
+const { User, Blog, Reading_list, Reading } = require('../models');
+const tokenExtractor = require('../util/tokenExtractor');
 
+const isAdmin = async (req, res, next) => {
+    const user = await User.findOne({
+        where: {
+            username: req.decodedToken.username
+        }
+    });
+    if (!user.admin) {
+        return res.status(401).json({ error: 'operation not allowed' });
+    }
+    next();
+}
 //user finder
 const userFinder = async (req, res, next) => {
     req.user = await User.findOne({
@@ -19,9 +31,31 @@ router.get('/', async (req, res) => {
         include: {
             model: Blog,
             attributes: { exclude: ['userId']}
-        }
+        },
+
     });
     res.json(users);
+});
+
+router.get('/:id', async (req, res) => {
+     const user = await User.findByPk(req.params.id, {
+        attributes: ['name', 'username'],
+        include: [ {
+            model: Blog,
+            attributes: { exclude: ['userId'] }
+        },
+            {
+            model: Blog,
+            as: 'readings',
+            attributes: { exclude: ['userId'] },
+            through: {
+                attributes: ['read', 'id']
+            }
+        }, 
+    
+    ]
+     });
+     res.json(user);
 });
 
 //User creation
@@ -49,6 +83,19 @@ router.put('/:username', userFinder, async (req, res, next) => {
         res.json(req.user);
     } catch (error) {
         next(error);
+    }
+});
+
+//user status change
+router.put('/user/:username', tokenExtractor, isAdmin, userFinder, async (req, res, next) => {
+    console.log(req.body)
+    if (req.user) {
+        req.user.disabled = req.body.disabled;
+        await req.user.save();
+        res.json(req.user);
+    }
+    else {
+        res.status(404).end();
     }
 });
 
