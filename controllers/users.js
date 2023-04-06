@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 
-const { User } = require('../models');
+const { User, Blog } = require('../models');
 
 //user finder
 const userFinder = async (req, res, next) => {
@@ -15,7 +15,11 @@ const userFinder = async (req, res, next) => {
 
 router.get('/', async (req, res) => {
     const users = await User.findAll({
-        attributes: ['id', 'name', 'username']
+        attributes: ['id', 'name', 'username'],
+        include: {
+            model: Blog,
+            attributes: { exclude: ['userId']}
+        }
     });
     res.json(users);
 });

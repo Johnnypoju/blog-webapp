@@ -1,6 +1,9 @@
 const router = require('express').Router();
+const { Op } = require('sequelize');
 
-const { Blog } = require('../models');
+const { Blog, User } = require('../models');
+
+const tokenExtractor = require('../util/tokenExtractor');
 
 const blogFinder = async (req, res, next) => {
     req.blog = await Blog.findByPk(req.params.id);
@@ -8,29 +11,65 @@ const blogFinder = async (req, res, next) => {
 }
 
 router.get('/', async (req, res) => {
-    const blogs = await Blog.findAll();
+    let where = {};
+
+    if (req.query.search) {
+        where = {
+            [Op.or]: [
+                {
+                    title: {
+                        [Op.iLike]: `%${req.query.search}%`
+                    }
+                },
+                {
+                    author: {
+                        [Op.iLike]: `%${req.query.search}%`
+                    }
+                }
+            ]
+        };
+    };
+    console.log(where);
+    const blogs = await Blog.findAll({
+        attributes: { exclude: ['userId']},
+        include: {
+            model: User,
+            attributes: ['name']
+        },
+        where
+    });
     console.log()
     res.json(JSON.stringify(blogs));
 });
 
-router.delete('/:id', blogFinder, async (req, res) => {
-    if (req.blog) {
-        await Blog.destroy({ 
-            where: { 
-                id: req.params.id 
-            } 
-        });
-        console.log(req.blog.toJSON());
-        res.json(req.blog);
-    } else {
-        res.status(404).end();
-    }
+router.delete('/:id', tokenExtractor, blogFinder, async (req, res, next) => {
+    try {
+        if (req.blog && req.blog.userId === req.decodedToken.id) {
+            await Blog.destroy({ 
+                where: { 
+                    id: req.params.id 
+                } 
+            });
+            console.log(req.blog.toJSON());
+            res.json(req.blog);
+        } else {
+            throw "Not the correct user or token";
+        }
+     } catch (error) {
+            next(error)
+        }
 });
 
-router.post('/', async (req, res, next) => {
+//add new blog entry
+router.post('/', tokenExtractor, async (req, res, next) => {
     try {
         console.log(req);
-        const blog = await Blog.create(req.body);
+        const user = await User.findOne({
+            where: {
+                username: req.decodedToken.username
+            }
+        });
+        const blog = await Blog.create({...req.body, userId: user.id });
         res.json(blog);
     } catch(error) {
         next(error);

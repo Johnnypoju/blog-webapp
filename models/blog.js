@@ -1,4 +1,4 @@
-const { Model, DataTypes } = require('sequelize');
+const { Model, DataTypes, DatabaseError } = require('sequelize');
 
 const { sequelize } = require('../util/db');
 
@@ -27,6 +27,10 @@ Blog.init({
         type: DataTypes.INTEGER,
         defaultValue: 0
 
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        
     }
 }, {
     sequelize,
