@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const { Blog, User } = require('../models');
 
 const sequelize = require('../util/db');
-
+const sessionStatus = require('../util/sessionStatus');
 const tokenExtractor = require('../util/tokenExtractor');
 
 const blogFinder = async (req, res, next) => {
@@ -46,7 +46,7 @@ router.get('/', async (req, res) => {
     res.json(JSON.stringify(blogs));
 });
 
-router.delete('/:id', tokenExtractor, blogFinder, async (req, res, next) => {
+router.delete('/:id', tokenExtractor, blogFinder, sessionStatus, async (req, res, next) => {
     try {
         if (req.blog && req.blog.userId === req.decodedToken.id) {
             await Blog.destroy({ 
@@ -65,7 +65,7 @@ router.delete('/:id', tokenExtractor, blogFinder, async (req, res, next) => {
 });
 
 //add new blog entry
-router.post('/', tokenExtractor, async (req, res, next) => {
+router.post('/', tokenExtractor, sessionStatus, async (req, res, next) => {
     try {
         console.log(req);
         const user = await User.findOne({

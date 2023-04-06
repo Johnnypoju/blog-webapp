@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 
+const activeSession = require('../util/sessionStatus');
 const { User, Blog, } = require('../models');
 const tokenExtractor = require('../util/tokenExtractor');
 
