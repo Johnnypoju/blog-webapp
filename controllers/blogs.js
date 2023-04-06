@@ -3,6 +3,8 @@ const { Op } = require('sequelize');
 
 const { Blog, User } = require('../models');
 
+const sequelize = require('../util/db');
+
 const tokenExtractor = require('../util/tokenExtractor');
 
 const blogFinder = async (req, res, next) => {
@@ -32,11 +34,13 @@ router.get('/', async (req, res) => {
     console.log(where);
     const blogs = await Blog.findAll({
         attributes: { exclude: ['userId']},
+        order: [[ 'likes', 'DESC' ]],
         include: {
             model: User,
             attributes: ['name']
         },
-        where
+        where,
+        
     });
     console.log()
     res.json(JSON.stringify(blogs));
