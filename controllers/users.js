@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 
-const { User, Blog, Reading_list, Reading } = require('../models');
+const { User, Blog, } = require('../models');
 const tokenExtractor = require('../util/tokenExtractor');
 
 const isAdmin = async (req, res, next) => {
@@ -37,7 +37,13 @@ router.get('/', async (req, res) => {
     res.json(users);
 });
 
+//provide userdata by id (added blogs, marked blogs and reading list status)
 router.get('/:id', async (req, res) => {
+    let where = {};
+    if (req.query.read) {
+        where.read = req.query.read;
+    };
+    console.log(where)
      const user = await User.findByPk(req.params.id, {
         attributes: ['name', 'username'],
         include: [ {
@@ -49,7 +55,8 @@ router.get('/:id', async (req, res) => {
             as: 'readings',
             attributes: { exclude: ['userId'] },
             through: {
-                attributes: ['read', 'id']
+                attributes: ['read', 'id'],
+                where
             }
         }, 
     

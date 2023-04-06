@@ -8,7 +8,7 @@ Reading_list.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrememnt: true
+        autoIncrement: true
     },
     blogId: {
         type: DataTypes.INTEGER,
